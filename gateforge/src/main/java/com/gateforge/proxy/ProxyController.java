@@ -1,27 +1,39 @@
 package com.gateforge.proxy;
 
-import org.springframework.http.HttpHeaders;
+import com.gateforge.routing.RouteConfig;
+import com.gateforge.routing.RouteResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
-import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Optional;
 
 @RestController
 public class ProxyController {
 
     private final RestClient restClient;
-    private static final String BACKEND_BASE_URL = "http://localhost:9001";
+    private final RouteResolver routeResolver;
 
-    public ProxyController(RestClient restClient) {
+    public ProxyController(RestClient restClient, RouteResolver routeResolver) {
         this.restClient = restClient;
+        this.routeResolver = routeResolver;
     }
 
     @RequestMapping("/api/**")
     public ResponseEntity<byte[]> proxy(HttpServletRequest request) {
         String path = request.getRequestURI();
-        String targetUrl = BACKEND_BASE_URL + path;
+
+        Optional<RouteConfig> matchedRoute = routeResolver.resolve(path);
+
+        if (matchedRoute.isEmpty()) {
+            return ResponseEntity.status(404).body("No route found for path".getBytes());
+        }
+
+        RouteConfig route = matchedRoute.get();
+        String targetUrl = route.getTargetUrl() + path;
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 

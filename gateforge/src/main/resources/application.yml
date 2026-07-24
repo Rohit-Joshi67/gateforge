@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+gateforge:
+  routes:
+    - id: user-service
+      path-prefix: /api/users
+      target-url: http://localhost:9001
+    - id: order-service
+      path-prefix: /api/orders
+      target-url: http://localhost:9002
+    - id: payment-service
+      path-prefix: /api/payments
+      target-url: http://localhost:9003
