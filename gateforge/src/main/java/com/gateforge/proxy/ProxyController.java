@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 import java.util.Optional;
@@ -37,15 +38,21 @@ public class ProxyController {
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
-        ResponseEntity<byte[]> response = restClient
-                .method(method)
-                .uri(targetUrl)
-                .retrieve()
-                .toEntity(byte[].class);
+        try {
+            ResponseEntity<byte[]> response = restClient
+                    .method(method)
+                    .uri(targetUrl)
+                    .retrieve()
+                    .toEntity(byte[].class);
 
-        return ResponseEntity
-                .status(response.getStatusCode())
-                .headers(headers -> headers.addAll(response.getHeaders()))
-                .body(response.getBody());
+            return ResponseEntity
+                    .status(response.getStatusCode())
+                    .headers(headers -> headers.addAll(response.getHeaders()))
+                    .body(response.getBody());
+
+        } catch (ResourceAccessException e) {
+            return ResponseEntity.status(504) // Gateway Timeout
+                    .body(("Backend service timed out or unreachable: " + route.getId()).getBytes());
+        }
     }
 }
