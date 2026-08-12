@@ -1,0 +1,35 @@
+=== GateForge Manual API Test Run ===
+Date: 2026-08-12 17:53:42
+Java: openjdk version "21.0.11" 2026-04-21 LTS
+
+--- TEST 1: GET /health (no auth) ---
+Status: 200
+Body: {"timestamp":"2026-08-12T12:23:42.635275100Z","service":"GateForge","status":"UP"}
+Latency: 
+
+--- TEST 2: GET /health/ready (no auth) ---
+Status: 200
+Body: {"status":"DEGRADED","service":"GateForge","timestamp":"2026-08-12T12:23:42.815894400Z","backends":[{"id":"user-service","target":"http://localhost:9001","status":"DOWN","reason":"unreachable or timed out"},{"id":"order-service","target":"http://localhost:9002","status":"DOWN","reason":"unreachable or timed out"},{"id":"payment-service","target":"http://localhost:9003","status":"DOWN","reason":"unreachable or timed out"}]}
+
+--- TEST 3: GET /login?username=rahul (no auth) ---
+Status: 200
+Token length: 131 chars
+Token prefix: eyJhbGciOiJIUzI1NiJ9...
+Latency: 211 ms
+
+--- TEST 4: GET /api/users/5 (no auth) ---
+Status: 401
+Body: 
+
+--- TEST 5: GET /api/users/5 (valid JWT, no backend) ---
+Status: 504
+Body: 
+Latency: 92 ms (includes 2s connect timeout)
+
+--- TEST 6: Rate limit (6 requests in 10s window, limit=5) ---
+Request 1: 504
+Request 2: 504
+Request 3: 504
+Request 4: 504
+Request 5: 429
+Request 6: 429

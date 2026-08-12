@@ -1,5 +1,6 @@
 package com.gateforge.ratelimit;
 
+import com.gateforge.config.PublicPaths;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@Order(3) // runs AFTER logging(1) and auth(2) — we rate-limit authenticated identities
+@Order(3)
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimiter rateLimiter;
@@ -25,19 +26,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        if (request.getRequestURI().equals("/health")) {
+        if (PublicPaths.isPublic(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Prefer authenticated username (set by JwtAuthFilter); fallback to IP
         String clientKey = (String) request.getAttribute("username");
         if (clientKey == null) {
             clientKey = request.getRemoteAddr();
         }
 
         if (!rateLimiter.isAllowed(clientKey)) {
-            response.setStatus(429); // Too Many Requests
+            response.setStatus(429);
             response.getWriter().write("Rate limit exceeded. Try again later.");
             return;
         }

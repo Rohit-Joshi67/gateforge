@@ -1,5 +1,6 @@
 package com.gateforge.ratelimit;
 
+import com.gateforge.routing.GatewayProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,11 +9,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class RateLimiter {
 
-    private static final int MAX_REQUESTS_PER_WINDOW = 5;
-    private static final long WINDOW_SIZE_MILLIS = 10_000; // 10 seconds
-
-    // Tracks each client's request count + window start time
+    private final int maxRequestsPerWindow;
+    private final long windowSizeMillis;
     private final ConcurrentHashMap<String, Window> clientWindows = new ConcurrentHashMap<>();
+
+    public RateLimiter(GatewayProperties gatewayProperties) {
+        this.maxRequestsPerWindow = gatewayProperties.getRateLimit().getMaxRequests();
+        this.windowSizeMillis = gatewayProperties.getRateLimit().getWindowSeconds() * 1000L;
+    }
 
     public boolean isAllowed(String clientKey) {
         long now = System.currentTimeMillis();
@@ -20,14 +24,13 @@ public class RateLimiter {
         Window window = clientWindows.computeIfAbsent(clientKey, k -> new Window(now));
 
         synchronized (window) {
-            if (now - window.startTime >= WINDOW_SIZE_MILLIS) {
-                // window expired, reset it
+            if (now - window.startTime >= windowSizeMillis) {
                 window.startTime = now;
                 window.count.set(0);
             }
 
             int currentCount = window.count.incrementAndGet();
-            return currentCount <= MAX_REQUESTS_PER_WINDOW;
+            return currentCount <= maxRequestsPerWindow;
         }
     }
 

@@ -10,6 +10,8 @@ import java.util.List;
 public class GatewayProperties {
 
     private List<RouteConfig> routes;
+    private RateLimitConfig rateLimit = new RateLimitConfig();
+    private JwtConfig jwt = new JwtConfig();
 
     public List<RouteConfig> getRoutes() {
         return routes;
@@ -17,5 +19,21 @@ public class GatewayProperties {
 
     public void setRoutes(List<RouteConfig> routes) {
         this.routes = routes;
+    }
+
+    public RateLimitConfig getRateLimit() {
+        return rateLimit;
+    }
+
+    public void setRateLimit(RateLimitConfig rateLimit) {
+        this.rateLimit = rateLimit;
+    }
+
+    public JwtConfig getJwt() {
+        return jwt;
+    }
+
+    public void setJwt(JwtConfig jwt) {
+        this.jwt = jwt;
     }
 }

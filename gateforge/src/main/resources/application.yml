@@ -2,6 +2,12 @@ server:
   port: 8080
 
 gateforge:
+  jwt:
+    secret: ${JWT_SECRET:this-is-a-32-byte-minimum-secret-key-for-hs256!}
+    expiration-minutes: 60
+  rate-limit:
+    max-requests: 5
+    window-seconds: 10
   routes:
     - id: user-service
       path-prefix: /api/users

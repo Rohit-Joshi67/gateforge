@@ -1,14 +1,23 @@
 package com.gateforge;
 
 import com.gateforge.auth.JwtUtil;
-import io.jsonwebtoken.ExpiredJwtException;
+import com.gateforge.routing.GatewayProperties;
+import com.gateforge.routing.JwtConfig;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtUtilTest {
 
-    private final JwtUtil jwtUtil = new JwtUtil();
+    private final JwtUtil jwtUtil = new JwtUtil(buildProperties());
+
+    private static GatewayProperties buildProperties() {
+        JwtConfig jwtConfig = new JwtConfig();
+        jwtConfig.setSecret("this-is-a-32-byte-minimum-secret-key-for-hs256!");
+        GatewayProperties properties = new GatewayProperties();
+        properties.setJwt(jwtConfig);
+        return properties;
+    }
 
     @Test
     void generateToken_thenValidate_returnsOriginalUsername() {

@@ -1,5 +1,6 @@
 package com.gateforge.auth;
 
+import com.gateforge.routing.GatewayProperties;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -10,15 +11,19 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // In production this key would come from a secrets manager, never hardcoded
-    private final SecretKey key = Keys.hmacShaKeyFor(
-            "this-is-a-32-byte-minimum-secret-key-for-hs256!".getBytes());
+    private final SecretKey key;
+    private final int expirationMinutes;
+
+    public JwtUtil(GatewayProperties gatewayProperties) {
+        this.key = Keys.hmacShaKeyFor(gatewayProperties.getJwt().getSecret().getBytes());
+        this.expirationMinutes = gatewayProperties.getJwt().getExpirationMinutes();
+    }
 
     public String generateToken(String username) {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
+                .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * expirationMinutes))
                 .signWith(key)
                 .compact();
     }

@@ -29,6 +29,23 @@ class RouteResolverTest {
         return new RouteResolver(properties);
     }
 
+    private RouteResolver buildResolverWithOverlappingPrefixes() {
+        RouteConfig usersRoute = new RouteConfig();
+        usersRoute.setId("user-service");
+        usersRoute.setPathPrefix("/api/users");
+        usersRoute.setTargetUrl("http://localhost:9001");
+
+        RouteConfig usersAdminRoute = new RouteConfig();
+        usersAdminRoute.setId("user-admin-service");
+        usersAdminRoute.setPathPrefix("/api/users/admin");
+        usersAdminRoute.setTargetUrl("http://localhost:9010");
+
+        GatewayProperties properties = new GatewayProperties();
+        properties.setRoutes(List.of(usersRoute, usersAdminRoute));
+
+        return new RouteResolver(properties);
+    }
+
     @Test
     void resolve_matchingPath_returnsCorrectRoute() {
         RouteResolver resolver = buildResolver();
@@ -46,5 +63,19 @@ class RouteResolverTest {
         Optional<RouteConfig> result = resolver.resolve("/api/unknown/1");
 
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void resolve_overlappingPrefixes_usesLongestMatch() {
+        RouteResolver resolver = buildResolverWithOverlappingPrefixes();
+
+        Optional<RouteConfig> adminResult = resolver.resolve("/api/users/admin/settings");
+        Optional<RouteConfig> userResult = resolver.resolve("/api/users/5");
+
+        assertTrue(adminResult.isPresent());
+        assertEquals("user-admin-service", adminResult.get().getId());
+
+        assertTrue(userResult.isPresent());
+        assertEquals("user-service", userResult.get().getId());
     }
 }

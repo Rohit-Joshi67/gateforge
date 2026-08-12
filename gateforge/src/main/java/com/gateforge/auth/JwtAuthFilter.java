@@ -1,5 +1,6 @@
 package com.gateforge.auth;
 
+import com.gateforge.config.PublicPaths;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,8 +26,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // Allow health check without auth
-        if (request.getRequestURI().equals("/health")) {
+        if (PublicPaths.isPublic(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
